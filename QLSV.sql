@@ -1,0 +1,47 @@
+﻿--		DDL
+CREATE DATABASE QLSV
+USE QLSV
+
+CREATE TABLE SINHVIEN
+(
+	MaSV int not null,
+	TenSV Nvarchar() not null,
+	GioiTinh Nvarchar(4) default 'Nam' check (GioiTinh='Nam' or GioiTinh='Nu'),
+	NgaySinh date check (NgaySinh<GETDATE()),
+	Que Nvarchar not null,
+	Lop Nvarchar 
+)
+CREATE TABLE MONHOC
+(
+	MaMH int not null,
+	TenMH Nvarchar unique,
+	DVHT int check(DVHT<=9 and DVHT>=2)
+)
+CREATE TABLE KETQUA
+(
+	MaSV int not null,
+	MaMH int not null,
+	Diem float check (Diem<=10 and Diem>=0)
+)
+
+ALTER TABLE SINHVIEN
+	ADD CONSTRAINT PK_SINHVIEN
+	PRIMARY KEY (MaSV)
+ALTER TABLE MONHOC
+	ADD CONSTRAINT PK_MONHOC
+	PRIMARY KEY (MaMH)
+ALTER TABLE KETQUA
+	ADD CONSTRAINT PK_KETQUA
+	PRIMARY KEY (MaSV, MaMH) 
+ALTER TABLE KETQUA
+	ADD CONSTRAINT FK_KETQUA_ref_SINHVIEN
+	FOREIGN KEY (MaSV)
+	REFERENCES SINHVIEN(MaSV)
+ALTER TABLE KETQUA
+	ADD CONSTRAINT FK_KETQUA_ref_MONHOC
+	FOREIGN KEY (MaMH)
+	REFERENCES MONHOC(MaMH)
+--DML
+INSERT INTO SINHVIEN VALUES
+	(1,N'Trần Bảo Trọng','Nam','1995-12-14',N'Hà Giang','L02')
+
