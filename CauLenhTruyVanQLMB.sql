@@ -132,3 +132,90 @@ where Luong =	(
 --27. Cho biết tổng số lương phải trả cho các phi công
 select SUM(Luong) as N'Tổng số lương phải trả cho phi công'
 from NHANVIEN join CHUNGNHAN on NHANVIEN.MaNV = CHUNGNHAN.MaNV
+--28. Tìm các chuyến bay có thể được thực hiện bởi tất cả các loại máy bay Boeing
+select * from CHUYENBAY
+where DoDai <=	(
+					select MIN(TamBay) from MAYBAY
+					where Hieu like 'Boeing%'
+				)
+--29. Cho biết mã số của các máy bay có thể được sử dụng để thực hiện chuyến bay từ Sài gòn (SGN) đến Huế (HUI)
+select MaMB, Hieu from MAYBAY
+where TamBay >=	(
+					select DoDai from CHUYENBAY
+					where (GaDi like 'SGN') and (GaDen like 'HUI')
+				)
+--30. Tìm các chuyến bay có thể được lái bởi các phi công có lương lớn hơn 100.000
+select * from CHUYENBAY
+where DoDai <=	(
+					select MIN(TamBay) 
+					from NHANVIEN	join CHUNGNHAN on NHANVIEN.MaNV = CHUNGNHAN.MaNV
+									join MAYBAY on CHUNGNHAN.MaMB = MAYBAY.MaMB
+					where Luong > 100000
+				)
+--31. Cho biết tên các phi công có lương nhỏ hơn chi phí thấp nhất của đường bay từ Sài Gòn (SGN) đến Buôn mê Thuột (BMV)
+select distinct Ten,Luong
+from NHANVIEN	join CHUNGNHAN on NHANVIEN.MaNV = CHUNGNHAN.MaNV
+where Luong <	(
+					select MIN(ChiPhi) from CHUYENBAY
+					where (GaDi like 'SGN') and (GaDen like 'BMV')
+				)
+--32. Cho biết mã số của các phi công có lương cao nhất
+select distinct NHANVIEN.MaNV, Ten
+from NHANVIEN	join CHUNGNHAN on NHANVIEN.MaNV = CHUNGNHAN.MaNV
+where Luong =	(
+					select MAX(Luong)
+					from NHANVIEN	join CHUNGNHAN on NHANVIEN.MaNV = CHUNGNHAN.MaNV
+				)
+--33. Cho biết mã số của các nhân viên có lương cao thứ nhì
+select MaNV, Ten,Luong from NHANVIEN
+where Luong =	(
+					select MAX(Luong) from NHANVIEN
+					where Luong !=	( select MAX(Luong) from NHANVIEN)	
+				)
+--34.  Cho biết mã số của các phi công có lương cao nhất hoặc thứ nhì
+select distinct NHANVIEN.MaNV, Ten,Luong 
+from NHANVIEN	join CHUNGNHAN on NHANVIEN.MaNV = CHUNGNHAN.MaNV
+where Luong =	(
+					select MAX(Luong) 
+					from NHANVIEN	join CHUNGNHAN on NHANVIEN.MaNV = CHUNGNHAN.MaNV
+					where Luong !=	( 
+										select MAX(Luong) 
+										from NHANVIEN	join CHUNGNHAN on NHANVIEN.MaNV = CHUNGNHAN.MaNV
+									)	
+				)
+--35. Cho biết tên và lương của các nhân viên không phải là phi công và có lương lớn hơn lương trung bình của tất cả các phi công.
+select Ten,Luong
+from NHANVIEN	full join CHUNGNHAN on NHANVIEN.MaNV = CHUNGNHAN.MaNV
+where (MaMB is null) 
+		and 
+			(Luong >	( 
+							select AVG(Luong) 
+							from NHANVIEN	join CHUNGNHAN on NHANVIEN.MaNV = CHUNGNHAN.MaNV
+						)
+			)
+--36. Cho biết tên các phi công có thể lái các máy bay có tầm bay lớn hơn 4.800km nhưng không có chứng nhận lái máy bay Boeing
+select distinct Ten,Luong
+from NHANVIEN	join CHUNGNHAN on NHANVIEN.MaNV = CHUNGNHAN.MaNV
+				join MAYBAY on CHUNGNHAN.MaMB = MAYBAY.MaMB
+where (TamBay > 4800) and (Hieu not like 'Boeing%') 
+--37. Cho biết tên các phi công lái ít nhất 3 loại máy bay có tầm xa hơn 3200km
+select Ten
+from NHANVIEN	join CHUNGNHAN on NHANVIEN.MaNV = CHUNGNHAN.MaNV
+				join MAYBAY on CHUNGNHAN.MaMB = MAYBAY.MaMB
+where TamBay > 3200
+group by NHANVIEN.MaNV,Ten,Luong
+having COUNT(NHANVIEN.MaNV) >=3
+--38. Với mỗi nhân viên cho biết mã số, tên nhân viên và tổng số loại máy bay mà nhân viên đó có thể lái
+select NHANVIEN.MaNV,Ten,COUNT(NHANVIEN.MaNV) as N'Tổng số máy bay'
+from NHANVIEN	join CHUNGNHAN on NHANVIEN.MaNV = CHUNGNHAN.MaNV
+group by NHANVIEN.MaNV,Ten
+--39. Với mỗi nhân viên, cho biết mã số, tên nhân viên và tổng số loại máy bay Boeing mà nhân viên đó có thể lái
+select NHANVIEN.MaNV,Ten,COUNT(NHANVIEN.MaNV) as N'Tổng số máy bay'
+from NHANVIEN	join CHUNGNHAN on NHANVIEN.MaNV = CHUNGNHAN.MaNV
+				join MAYBAY on CHUNGNHAN.MaMB = MAYBAY.MaMB
+where Hieu like 'Boeing%'
+group by NHANVIEN.MaNV,Ten
+--40. Với mỗi loại máy bay,  cho biết loại máy bay và tổng số phi công có thể lái loại máy bay đó.
+select MAYBAY.MaMB, Hieu, COUNT(MAYBAY.MaMB) as N'Số phi công'
+from CHUNGNHAN join MAYBAY on CHUNGNHAN.MaMB = MAYBAY.MaMB
+group by MAYBAY.MaMB, Hieu
