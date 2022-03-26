@@ -1,12 +1,12 @@
 --DDL
-CREATE DATABASE HANGKHONG
-USE HANGKHONG
+CREATE DATABASE QLMB
+USE QLMB
 
 CREATE TABLE CHUYENBAY
 (
 	MaCB char(5) not null,
 	GaDi varchar(50),
-	GeDen varchar(50),
+	GaDen varchar(50),
 	DoDai int,
 	GioDi time,
 	GioDen time,
