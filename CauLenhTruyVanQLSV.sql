@@ -98,3 +98,83 @@ where MaSV not in	(
 						having COUNT(SINHVIEN.MaSV)>=2
 					)
 order by Lop,SINHVIEN.MaSV
+--13. Cho biết mã số và tên của những sinh viên tham gia thi tất cả các môn.
+select SINHVIEN.MaSV, TenSV
+from SINHVIEN join KETQUA on SINHVIEN.MaSV = KETQUA.MaSV
+where (Diem is not null)
+group by SINHVIEN.MaSV, TenSV
+having COUNT(SINHVIEN.MaSV)= (select COUNT(*) from MONHOC)
+--14. Cho biết mã sinh viên và tên của sinh viên có điểm trung bình chung học tập >=6
+select SINHVIEN.MaSV, TenSV,AVG(Diem)
+from SINHVIEN join KETQUA on SINHVIEN.MaSV = KETQUA.MaSV
+group by SINHVIEN.MaSV, TenSV
+having AVG(Diem)>=6.0
+--15. Cho biết mã sinh viên và tên những sinh viên phải thi lại ở ít nhất là những môn mà sinh viên có mã số 3 phải thi lại
+select SiNHVIEN.MaSV, TenSV
+from SINHVIEN join KETQUA on SINHVIEN.MaSV =KETQUA.MaSV
+where		((Diem<4) or (Diem is null)) and (SINHVIEN.MaSV!=3)
+		and 
+			(MaMH in(
+					select MONHOC.MaMH 
+					from MONHOC join KETQUA on MONHOC.MaMH = KETQUA.MaMH
+					where (Diem <4) and (MaSV=3) 
+					)
+		)
+group by SiNHVIEN.MaSV, TenSV
+having COUNT(SiNHVIEN.MaSV) =	(
+									select COUNT(*) 
+									from MONHOC join KETQUA on MONHOC.MaMH = KETQUA.MaMH
+									where (Diem <4) and (MaSV=3)
+								)
+--16. Cho mã sv và tên của những sinh viên có hơn nửa số điểm  >=5. 
+select BangSoDiemLonHon5.MaSV, TenSV, SoLuongDiemLonHon5, SoLuongMon
+from
+	(select SINHVIEN.MaSV, TenSV,COUNT(SINHVIEN.MaSV) as SoLuongDiemLonHon5
+	from SINHVIEN join KETQUA on SINHVIEN.MaSV = KETQUA.MaSV
+	where (Diem >=5)
+	group by SINHVIEN.MaSV, TenSV) as BangSoDiemLonHon5	
+join
+	(select MaSV,COUNT(MaSV) as SoLuongMon
+	from KETQUA 
+	group by MaSV) as BangSoMon
+on BangSoDiemLonHon5.MaSV = BangSoMon.MaSV
+where SoLuongDiemLonHon5 > SoLuongMon / 2
+--17. Cho danh sách tên và mã sinh viên có điểm trung bình chung lớn hơn điểm trung bình của toàn khóa.
+select SINHVIEN.MaSV, TenSV
+from SINHVIEN join KETQUA on SINHVIEN.MaSV = KETQUA.MaSV
+group by SINHVIEN.MaSV,TenSV
+having AVG(Diem) >	(
+						select AVG(Diem) from KETQUA
+						where Diem is not null
+					)
+	-- Diem TB tinh theo Diem TB cua tung lop
+select AVG(DiemTB)
+from
+	(select Lop, AVG(Diem) as DiemTB
+	from SINHVIEN join KETQUA on SINHVIEN.MaSV = KETQUA.MaSV
+	where Diem is not null
+	group by Lop) as BangDiemTB
+--18. *Cho danh sách mã sinh viên, tên sinh viên có điểm cao nhất của mỗi lớp.
+select distinct SINHVIEN.MaSV,TenSV,DiemCaoNhat
+from 
+	SINHVIEN join KETQUA on SINHVIEN.MaSV = KETQUA.MaSV
+join
+	(select Lop,MAX(Diem) as DiemCaoNhat
+	from SINHVIEN join KETQUA on SINHVIEN.MaSV = KETQUA.MaSV
+	group by(Lop)) as DiemCaoNhatMoiLop
+on SINHVIEN.Lop = DiemCaoNhatMoiLop.Lop
+where Diem = DiemCaoNhat 
+--19. Cho danh sách tên và mã sinh viên có điểm trung bình chung lớn hơn điểm trung bình của lớp sinh viên đó theo học.
+select distinct MaSV,TenSV,DiemTBSV,BangDiemTBTheoMaSV.Lop,DiemTBLop
+from 
+	(select SINHVIEN.MaSV,TenSV,Lop,AVG(Diem) as DiemTBSV
+	from SINHVIEN join KETQUA on SINHVIEN.MaSV = KETQUA.MaSV
+	group by SINHVIEN.MaSV,TenSV,Lop) as BangDiemTBTheoMaSV
+join
+	(select Lop, AVG(Diem) as DiemTBLop
+	from SINHVIEN join KETQUA on SINHVIEN.MaSV = KETQUA.MaSV
+	where Diem is not null
+	group by Lop) as BangDiemTBTheoLop
+on BangDiemTBTheoMaSV.Lop = BangDiemTBTheoLop.Lop
+where DiemTBSV > DiemTBLop
+order by BangDiemTBTheoMaSV.Lop
