@@ -291,7 +291,7 @@ join
 	) as TamBayMaxCuaPhiCong
 on CHUYENBAY.DoDai > TamBayMaxCuaPhiCong.TamBay
 group by MaCB
---50. Một hành khách muốn đi từ Hà Nội (HAN) đến nha trang (CXR) mà không phải đổi chuyến bay quá một lần. Cho biết mã chuyếnbay, thời gian khời hành từ Hà nội nếu hành khách muốn đến Nha Trang trước 16:00
+--50. Một hành khách muốn đi từ Hà Nội (HAN) đến nha trang (CXR) mà không phải đổi chuyến bay quá một lần. Cho biết mã chuyến bay, thời gian khời hành từ Hà nội nếu hành khách muốn đến Nha Trang trước 16:00
 select *
 from
 (select * from CHUYENBAY
@@ -311,7 +311,30 @@ or
 	and 
 		(CBTuHaNoi.GioDen<='16:00')
 	)
+
+--51. Cho biết thông tin của các đường bay mà tất cả các phi công có thể bay trên đường bay đó đều có lương lớn hơn 100000
 select * from CHUYENBAY
-where GaDi like 'HAN'
-select * from CHUYENBAY
-where GaDen like 'CXR'
+where DoDai <=	(
+					select MIN(TamBay) 
+					from NHANVIEN	join CHUNGNHAN on NHANVIEN.MaNV = CHUNGNHAN.MaNV
+									join MAYBAY on CHUNGNHAN.MaMB = MAYBAY.MaMB
+					where Luong>100000
+				)
+--52. Cho biết tên các phi công chỉ lái các loại máy bay có tầm xa hơn 3200km và một trong số đó là Boeing
+select distinct  Ten
+from NHANVIEN	join CHUNGNHAN on NHANVIEN.MaNV = CHUNGNHAN.MaNV
+				join MAYBAY on CHUNGNHAN.MaMB = MAYBAY.MaMB
+where (TamBay > 3200) and (Hieu like 'Boeing%')
+--group by NHANVIEN.MaNV,Ten
+--having COUNT(NHANVIEN.MaNV) = 1
+
+--53. Tìm các phi công có thể lái tất cả các loại máy bay Boeing.
+select NHANVIEN.MaNV, Ten
+from NHANVIEN	join CHUNGNHAN on NHANVIEN.MaNV = CHUNGNHAN.MaNV
+				join MAYBAY on CHUNGNHAN.MaMB = MAYBAY.MaMB
+where Hieu like 'Boeing%'
+group by NHANVIEN.MaNV , Ten
+having COUNT(NHANVIEN.MaNV) =	(
+									select COUNT(*) from MAYBAY
+									where Hieu like 'Boeing%'
+								)
