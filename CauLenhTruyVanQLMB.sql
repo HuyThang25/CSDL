@@ -219,3 +219,99 @@ group by NHANVIEN.MaNV,Ten
 select MAYBAY.MaMB, Hieu, COUNT(MAYBAY.MaMB) as N'Số phi công'
 from CHUNGNHAN join MAYBAY on CHUNGNHAN.MaMB = MAYBAY.MaMB
 group by MAYBAY.MaMB, Hieu
+--41. Với mỗi loại máy bay, cho biết loại máy bay và tổng số chuyến bay không thể thực hiện bởi loại máy bay đó.
+select MaMB, Hieu,COUNT(MaMB) as N'Tổng số chuyến bay không thực hiện được'
+from MAYBAY join CHUYENBAY on MAYBAY.TamBay < CHUYENBAY.DoDai
+group by MaMB,Hieu
+--42. Với mỗi loại máy bay, hãy cho biết loại máy bay và tổng số phi công có lương lớn hơn 100.000 có thể lái loại máy bay đó.
+select MAYBAY.MaMB, Hieu, COUNT(MAYBAY.MaMB) as N'Tổng số phi công'
+from NHANVIEN	join CHUNGNHAN on NHANVIEN.MaNV = CHUNGNHAN.MaNV
+				join MAYBAY on CHUNGNHAN.MaMB = MAYBAY.MaMB
+where Luong >100000
+group by MAYBAY.MaMB,Hieu
+--43. Với mỗi loại máy bay có tầm bay trên 3200km, cho biết tên của loại máy bay và lương trung bình của các phi công có thể lái loại máy bay đó.
+select MAYBAY.MaMB, Hieu, AVG(Luong) as N'Lương trung bình'
+from NHANVIEN	join CHUNGNHAN on NHANVIEN.MaNV = CHUNGNHAN.MaNV
+				join MAYBAY on CHUNGNHAN.MaMB = MAYBAY.MaMB
+where TamBay>3200
+group by MAYBAY.MaMB,Hieu
+--44. Với mỗi loại máy bay  hãy cho biết loại máy bay và tổng số nhân viên không thể lái loại máy bay đó
+select MAYBAY.MaMB, Hieu, 
+							((select COUNT(*) from NHANVIEN) - COUNT(MAYBAY.MaMB)) as N'Tổng số nhân viên'
+from CHUNGNHAN	join MAYBAY on CHUNGNHAN.MaMB = MAYBAY.MaMB
+group by MAYBAY.MaMB,Hieu
+--45. Với mỗi loại máy bay  hãy cho biết loại máy bay và tổng số phi công không thể lái loại máy bay đó.
+select MAYBAY.MaMB, Hieu,	(	
+								(
+									select COUNT(*)
+									from	(select  distinct NHANVIEN.MaNV
+											 from NHANVIEN join CHUNGNHAN on NHANVIEN.MaNV = CHUNGNHAN.MaNV
+											) as PhiCong
+								)
+								- COUNT(MAYBAY.MaMB)
+							) as N'Tổng số nhân viên'
+from CHUNGNHAN	join MAYBAY on CHUNGNHAN.MaMB = MAYBAY.MaMB
+group by MAYBAY.MaMB,Hieu
+--46. Với mỗi nhân viên, cho biết mã số, tên nhân viên và tổng số chuyến bay xuất phát từ Sài Gòn mà nhân viên đó không thể lái
+
+select MaNV, Ten, COUNT(MaNV) as N'Tổng số chuyến bay'
+from	
+		(select NHANVIEN.MaNV as MaNV, Ten, MAX(TamBay) as TamBay
+		from NHANVIEN	full join CHUNGNHAN on NHANVIEN.MaNV = CHUNGNHAN.MaNV
+						full join MAYBAY on CHUNGNHAN.MaMB = MAYBAY.MaMB
+		group by NHANVIEN.MaNV, Ten) as TamBayLonNhatCuaNhanVien
+join	
+		(select DoDai from CHUYENBAY
+		 where GaDi like 'SGN' ) as DoDaiCBTuSaiGon on (TamBayLonNhatCuaNhanVien.TamBay < DoDaiCBTuSaiGon.DoDai) or (TamBay is null)
+group by MaNV,Ten
+--47. Với mỗi phi công, cho biết mã số, tên phi công và tổng số chuyến bay xuất phát từ Sài Gòn mà phi công đó có thể lái
+select MaNV, Ten, COUNT(MaNV) as N'Tổng số chuyến bay'
+from	
+		(select NHANVIEN.MaNV as MaNV, Ten, MAX(TamBay) as TamBay
+		from NHANVIEN	join CHUNGNHAN on NHANVIEN.MaNV = CHUNGNHAN.MaNV
+						join MAYBAY on CHUNGNHAN.MaMB = MAYBAY.MaMB
+		group by NHANVIEN.MaNV, Ten) as TamBayLonNhatCuaNhanVien
+join	
+		(select DoDai from CHUYENBAY
+		 where GaDi like 'SGN' ) as DoDaiCBTuSaiGon on TamBayLonNhatCuaNhanVien.TamBay >= DoDaiCBTuSaiGon.DoDai
+group by MaNV,Ten
+--48. Với mỗi chuyến bay, hãy cho biết mã số chuyến bay và tổng số loại máy bay có thể thực hiện chuyến bay đó
+select MaCB,GaDi,GaDen,COUNT(MaCB) as 'Số máy bay'
+from CHUYENBAY join MAYBAY on CHUYENBAY.DoDai < MAYBAY.TamBay
+group by MaCB,GaDi,GaDen
+--49. Với mỗi chuyến bay, cho biết mã số chuyến bay và tổng số phi công không thể lái chuyến đó.
+select MaCB, COUNT(MaCB) as N'Tổng số phi công'
+from 
+	CHUYENBAY 
+join 
+	(	
+		select MaNV, MAX(TamBay) as TamBay 
+		from CHUNGNHAN join MAYBAY on CHUNGNHAN.MaMB = MAYBAY.MaMB
+		group by MaNV
+	) as TamBayMaxCuaPhiCong
+on CHUYENBAY.DoDai > TamBayMaxCuaPhiCong.TamBay
+group by MaCB
+--50. Một hành khách muốn đi từ Hà Nội (HAN) đến nha trang (CXR) mà không phải đổi chuyến bay quá một lần. Cho biết mã chuyếnbay, thời gian khời hành từ Hà nội nếu hành khách muốn đến Nha Trang trước 16:00
+select *
+from
+(select * from CHUYENBAY
+where GaDi like 'HAN') as CBTuHaNoi
+join 
+CHUYENBAY
+on (
+		(CBTuHaNoi.GaDen = CHUYENBAY.GaDi)
+	and 
+		(CHUYENBAY.GaDen ='CXR')
+	and 
+		(CHUYENBAY.GioDen <= '16:00')
+	)
+or
+	(
+		(CBTuHaNoi.GaDen like 'CRX')
+	and 
+		(CBTuHaNoi.GioDen<='16:00')
+	)
+select * from CHUYENBAY
+where GaDi like 'HAN'
+select * from CHUYENBAY
+where GaDen like 'CXR'
