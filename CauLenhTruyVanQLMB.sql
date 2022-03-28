@@ -286,26 +286,19 @@ join
 on CHUYENBAY.DoDai > TamBayMaxCuaPhiCong.TamBay
 group by MaCB
 --50. Một hành khách muốn đi từ Hà Nội (HAN) đến nha trang (CXR) mà không phải đổi chuyến bay quá một lần. Cho biết mã chuyến bay, thời gian khời hành từ Hà nội nếu hành khách muốn đến Nha Trang trước 16:00
-select *
-from
-(select * from CHUYENBAY
-where GaDi like 'HAN') as CBTuHaNoi
-join 
-CHUYENBAY
-on (
-		(CBTuHaNoi.GaDen = CHUYENBAY.GaDi)
-	and 
-		(CHUYENBAY.GaDen ='CXR')
-	and 
-		(CHUYENBAY.GioDen <= '16:00')
-	)
-or
-	(
-		(CBTuHaNoi.GaDen like 'CRX')
-	and 
-		(CBTuHaNoi.GioDen<='16:00')
-	)
-
+(
+	select CB_1.MaCB, CB_1.GioDi
+	from CHUYENBAY as CB_1 join CHUYENBAY as CB_2
+	on CB_1.GaDen = CB_2.GaDi
+	where	(CB_1.GaDi like 'HAN') and (CB_2.GaDen like 'CXR') 
+		and 
+			(CB_1.GioDen < CB_2.GioDi) and (CB_2.GioDen <= '16:00')
+)
+union
+(
+	select MaCB, GioDi from CHUYENBAY
+	where (GaDi like 'HAN') and (GaDen like 'CXR') and (GioDen <='16:00')
+)
 --51. Cho biết thông tin của các đường bay mà tất cả các phi công có thể bay trên đường bay đó đều có lương lớn hơn 100000
 select * from CHUYENBAY
 where DoDai <=	(
