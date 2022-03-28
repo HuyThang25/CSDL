@@ -1,5 +1,5 @@
 ﻿USE QLMB
-
+select * from CHUYENBAY
 --1. Cho biết thông tin về các chuyến bat đi Đà Lạt (DAD)
 select * from CHUYENBAY 
 where GaDen like 'DAD'
@@ -88,16 +88,10 @@ select MaNV from CHUNGNHAN
 group by MaNV
 having COUNT(MaNV)=3
 --22. Với mỗi phi công có thể lái nhiều hơn 3 loại máy bay, cho biết mã số phi công và tầm bay lớn nhất của các loại máy bay mà phi công đó có thể lái
-
-select NHANVIEN.MaNV, MAX(TamBay) as N'Tầm bay lón nhất trong các máy bay' 
-from NHANVIEN	join CHUNGNHAN on NHANVIEN.MaNV = CHUNGNHAN.MaNV
-				join MAYBAY on CHUNGNHAN.MaMB = MAYBAY.MaMB
-where NHANVIEN.MaNV in	(
-							select MaNV from CHUNGNHAN
-							group by MaNV
-							having COUNT(MaNV)>3
-						)
-group by NHANVIEN.MaNV
+select MaNV,MAX(TamBay) 
+from CHUNGNHAN join MayBay on CHUNGNHAN.MaMB = MAYBAY.MaMB
+group by MaNV
+having COUNT(MaNV)>3
 --23. Cho biết mã số của các phi công có thể lái được nhiều loại máy bay nhất
 select MaNV from CHUNGNHAN
 group by MaNV
