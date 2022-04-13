@@ -65,16 +65,89 @@ intersect
 	where (MaSP like 'BB02') and (SL between 10 and 20)
 )
 --16. Tìm các số hoá đơn mua nhiều loại sản phẩm nhất
-
+select HOADON.SoHD
+from HOADON join CTHD on HOADON.SoHD = CTHD.SoHD
+group by HOADON.SoHD
+having COUNT(HOADON.SoHD) =	(
+								select top(1) (COUNT(HOADON.SoHD))
+								from HOADON join CTHD on HOADON.SoHD = CTHD.SoHD
+								group by HOADON.SoHD
+								order by COUNT(HOADON.SoHD) desc
+							)
 --17. Tìm các số hoá đơn mua nhiều số lượng sản phẩm nhất
+select HOADON.SoHD
+from HOADON join CTHD on HOADON.SoHD = CTHD.SoHD
+group by HOADON.SoHD
+having SUM(SL) =	(
+						select top(1) (SUM(SL))
+						from HOADON join CTHD on HOADON.SoHD = CTHD.SoHD
+						group by HOADON.SoHD
+						order by SUM(SL) desc
+					)
 --18. Tìm sản phẩm bán chạy nhất từ trước đến nay
+select SANPHAM.MaSP,TenSP,Gia,DVT,NuocSX
+from SANPHAM join CTHD on SANPHAM.MaSP = CTHD.MaSP
+group by SANPHAM.MaSP,TenSP,Gia,DVT,NuocSX
+having SUM(SL) =(
+					select TOP(1) SUM(SL)
+					from SANPHAM join CTHD on SANPHAM.MaSP = CTHD.MaSP
+					group by SANPHAM.MaSP
+					order by SUM(SL) desc
+				)
 --19. In ra danh sách các sản phẩm (MASP,TENSP) do “Trung Quoc” sản xuất hoặc các sản phẩm được bán ra trong ngày 1/1/2007.
+select distinct SANPHAM.MaSP, TenSP 
+from SANPHAM	join CTHD on SANPHAM.MaSP = CTHD.MaSP
+				join HOADON on CTHD.SoHD = HOADON.SoHD
+where (NuocSX like ('Trung Quoc')) or (NgHD = '2007-01-01')
 --20. In ra danh sách các sản phẩm (MASP,TENSP) không bán được.
+(
+	select MaSP, TenSP from SANPHAM
+)
+except
+(
+	select distinct SANPHAM.MaSP, TenSP
+	from SANPHAM join CTHD on SANPHAM.MaSP = CTHD.MaSP
+)
 --21. In ra danh sách các sản phẩm (MASP,TENSP) không bán được trong năm 2006.
+(
+	select MaSP, TenSP from SANPHAM
+)
+except
+(
+	select distinct SANPHAM.MaSP, TenSP
+	from SANPHAM	join CTHD on SANPHAM.MaSP = CTHD.MaSP
+					join HOADON on CTHD.SoHD = HOADON.SoHD
+	where YEAR(NgHD) = 2006
+
+)
 --22. In ra danh sách các sản phẩm (MASP,TENSP) do “Trung Quoc” sản xuất không bán được trong năm 2006.
+(
+	select MaSP, TenSP from SANPHAM
+	where NuocSX like 'Trung Quoc'
+)
+except
+(
+	select distinct SANPHAM.MaSP, TenSP
+	from SANPHAM	join CTHD on SANPHAM.MaSP = CTHD.MaSP
+					join HOADON on CTHD.SoHD = HOADON.SoHD
+	where YEAR(NgHD) = 2006
+
+)
 --23. Tìm số hóa đơn đã mua tất cả các sản phẩm do Singapore sản xuất.
+select CTHD.SoHD
+from CTHD	join SANPHAM on CTHD.MaSP = SANPHAM.MaSP
+where NuocSX like 'Singapore'
+group by CTHD.SoHD
+having COUNT(CTHD.SoHD) =	(
+								select COUNT(*) from SANPHAM
+								where NuocSX like 'Singapore'
+							)
 --24. Có bao nhiêu hóa đơn không phải của khách hàng đăng ký thành viên mua?
+select COUNT(*) from HOADON
+where MaKH is null
 --25. Có bao nhiêu sản phẩm khác nhau được bán ra trong năm 2006.
+select * 
+from HOADON join CTHD
 --26. Trị giá trung bình của tất cả các hóa đơn được bán ra trong năm 2006 là bao nhiêu?
 --27. Tính doanh thu bán hàng trong năm 2006.
 --28. Tìm số hóa đơn có trị giá cao nhất trong năm 2006.
