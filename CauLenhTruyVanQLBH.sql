@@ -292,12 +292,57 @@ join
 	) as GiaCaoNhatTheoNuoc
 on (SANPHAM.Gia = GiaCaoNhatTheoNuoc.Gia) and (SANPHAM.NuocSX = GiaCaoNhatTheoNuoc.NuocSX)
 --47. Tìm nước sản xuất sản xuất ít nhất 3 sản phẩm có giá bán khác nhau.
-select SP1.NuocSX 
+select * from SANPHAM
+intersect
+(select SP1.* 
 from SANPHAM as SP1 join SANPHAM as SP2
-on SP1.NuocSX = SP2.NuocSX and SP1.Gia != SP2.Gia and SP1.MaSP != SP2.MaSP
---group by SP1.NuocSX
---having COUNT(SP1.NuocSX)>=6
-order by SP1.NuocSX
+on SP1.NuocSX = SP2.NuocSX and SP1.Gia = SP2.Gia and SP1.MaSP != SP2.MaSP)
 --48. *Trong 10 khách hàng có doanh số cao nhất, tìm khách hàng có số lần mua hàng nhiều nhất.
+select KHACHHANG.MaKH, HoTen 
+from 
+	(
+		select top(10) MaKH, HoTen from KHACHHANG
+		order by DoanhSo desc
+	) as KHACHHANG
+join
+	HOADON
+on KHACHHANG.MaKH = HOADON.MaKH 
+group by KHACHHANG.MaKH, HoTen
+having COUNT(KHACHHANG.MaKH) =	(
+									--Số lần mua hàng nhiều nhất trong 10 khách hàng có doánh số cao nhất
+									select  top(1) COUNT(KHACHHANG.MaKH)
+									from 
+										(
+											select top(10) MaKH from KHACHHANG
+											order by DoanhSo desc
+										) as KHACHHANG
+									join
+										HOADON
+									on KHACHHANG.MaKH = HOADON.MaKH 
+									group by KHACHHANG.MaKH
+									order by COUNT(KHACHHANG.MaKH) desc
+								)
 --49. Cập nhật giá trị Giá sản phẩm lên gấp đôi.
+select MaSP, TenSP, DVT, NuocSX, Gia*2 as Gia 
+from SANPHAM
+
 --50. Liệt kê số lượng sản phẩm bán được theo phân khúc lứa tuổi: dưới 50 tuổi, từ 50-60 tuổi và trên 60 tuổi.
+select Tuoi , SUM(SoLuongSPBanRa) as 'So luong san pham'
+from(
+		select	(
+					case 
+						when YEAR(GETDATE())-YEAR(NgSinh) < 50 then 'duoi 50 tuoi'
+						when YEAR(GETDATE())-YEAR(NgSinh) between 50 and 60 then 'tu 50 den 60 tuoi'
+						else  'tren 60 tuoi'
+					end
+				) as Tuoi,
+				SoLuongSPBanRa
+		from KHACHHANG	join HOADON on KHACHHANG.MaKH = HOADON.MaKH
+						join 	(
+									select SoHD, SUM(SL) as SoLuongSPBanRa from CTHD 
+									group by SoHD
+								) as CTHD
+						on HOADON.SoHD = CTHD.SoHD
+	) as TuoiVaSL
+group by Tuoi
+
