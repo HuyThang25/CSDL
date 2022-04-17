@@ -292,11 +292,10 @@ join
 	) as GiaCaoNhatTheoNuoc
 on (SANPHAM.Gia = GiaCaoNhatTheoNuoc.Gia) and (SANPHAM.NuocSX = GiaCaoNhatTheoNuoc.NuocSX)
 --47. Tìm nước sản xuất sản xuất ít nhất 3 sản phẩm có giá bán khác nhau.
+select NuocSX from SANPHAM
+group by NuocSX
+having COUNT(distinct Gia)>=3
 select * from SANPHAM
-intersect
-(select SP1.* 
-from SANPHAM as SP1 join SANPHAM as SP2
-on SP1.NuocSX = SP2.NuocSX and SP1.Gia = SP2.Gia and SP1.MaSP != SP2.MaSP)
 --48. *Trong 10 khách hàng có doanh số cao nhất, tìm khách hàng có số lần mua hàng nhiều nhất.
 select KHACHHANG.MaKH, HoTen 
 from 
