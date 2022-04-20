@@ -325,3 +325,35 @@ having COUNT(NHANVIEN.MaNV) =	(
 									select COUNT(*) from MAYBAY
 									where Hieu like 'Boeing%'
 								)
+/********************/
+create view NHANVIEN_ChucVu
+as
+	select	*,
+			case
+				when Luong>200000 then N'Giám Đốc'
+				when Luong>100000 then N'Trưởng phòng'
+				else N'Nhân Viên'
+			end as ChucVu
+	from NHANVIEN
+	with check option
+select * from NHANVIEN_ChucVu
+create view NHANVIEN_ViTri
+as
+	select	distinct NHANVIEN.*,
+			case 
+				when CHUNGNHAN.MaNV is null then N'Nhân viên văn phòng'
+				else N'Phi công'
+			end as ViTri
+	from NHANVIEN left join CHUNGNHAN  on NHANVIEN.MaNV = CHUNGNHAN.MaNV
+	with check option
+select * from NHANVIEN_ViTri
+create view CHUYENBAY_HN_SGN
+as 
+	select * from CHUYENBAY
+	where (GaDi like 'HAN') or (GaDi like 'SGN')
+select * from CHUYENBAY_HN_SGN
+create view CHUYENBAY_not_HN_SGN
+as 
+	select * from CHUYENBAY
+	where (GaDi not like 'HAN') and (GaDi not like 'SGN')
+select * from CHUYENBAY_not_HN_SGN
