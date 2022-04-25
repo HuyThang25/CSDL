@@ -178,3 +178,51 @@ join
 on BangDiemTBTheoMaSV.Lop = BangDiemTBTheoLop.Lop
 where DiemTBSV > DiemTBLop
 order by BangDiemTBTheoMaSV.Lop
+/******************************/
+--1. Viết thủ tục lưu trữ để hiển thị các sinh viên trong lớp gồm thông tin: mã sinh viên, tên sinh viên, môn mà sinh viên này chưa qua theo giá trị lớp nhập vào.
+	--	+ Nếu nhập '*' thì in tất cả các sinh viên và môn học sinh viên đó phải thi lại
+create proc proc_SVThiTruotTrongLop(@Lop Nvarchar(5))
+as
+	if (@Lop like '*')
+		select SINHVIEN.MaSV, TenSV, TenMH 
+		from SINHVIEN	join KETQUA on SINHVIEN.MaSV = KETQUA.MaSV
+						join MONHOC on KETQUA.MaMH = MONHOC.MaMH
+		where (Diem <4)
+	else
+		select SINHVIEN.MaSV, TenSV, TenMH 
+		from SINHVIEN	join KETQUA on SINHVIEN.MaSV = KETQUA.MaSV
+						join MONHOC on KETQUA.MaMH = MONHOC.MaMH
+		where (Diem <4) and (@Lop = Lop)
+--2. Viết thủ tục lưu trữ để hiển thị các sinh viên đạt được học bổng, biết rằng để được học bổng thì sinh viên đó phải có điểm tổng kết >= 7.0 và không được thi/học lại môn nào
+create proc proc_SVCoHocBong
+as
+	select SINHVIEN.MaSV, TenSV, AVG(Diem)
+	from SINHVIEN	join KETQUA on SINHVIEN.MaSV = KETQUA.MaSV
+	where SINHVIEn.MaSV  not in	(--Danh sach thi lai
+									select MaSV from KETQUA 
+									where Diem < 4
+								)
+	group by SINHVIEN.MaSV,TenSV
+	having AVG(Diem) >= 7.0
+--3. Viết thủ tục lưu trữ để cập nhật lại điểm các sinh viên thi môn có mã môn học là @maMH: tất cả các sinh viên được cộng 1đ, max là 10đ
+create proc proc_SuaSV(@MaSV int)
+as 
+	update KETQUA 
+	set Diem = Diem+1
+	where (MaSV = @MaSV) and (Diem <10)
+--4. Nhập vào mã môn học và mã sinh viên, kiểm tra sinh viên này có đậu môn này hay không, nếu có thì in ra 'Đậu', không thì in ra 'Trượt'
+ create proc proc_CheckSVDau(@MaMH int , @MaSV int)
+ as
+	if (
+			select Diem from KETQUA
+			where (MaSV = @MaSV) and (MaMH = @MaMH)
+		) > 4
+	print N'Đậu'
+	else 
+	print N'Trượt'
+	select * from KETQUA
+
+--5. In tất cả các điểm với tên cột là tên môn học của 1 sinh viên khi ta truyền vào mã sinh viên. Thêm 1 cột cuối cùng là Điểm trung bình.
+ 
+--6. Nhập vào mã sinh viên và mã môn học tương ứng, in ra các sinh viên có điểm thi môn học đó cao hơn sinh viên có mã sinh viên ta nhập.
+ 
