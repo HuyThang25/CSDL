@@ -226,3 +226,64 @@ as
  
 --6. Nhập vào mã sinh viên và mã môn học tương ứng, in ra các sinh viên có điểm thi môn học đó cao hơn sinh viên có mã sinh viên ta nhập.
  
+ --		function
+
+ --1. Thống kê các sinh viên có điểm trung bình từ 8 trở lên theo từng lớp
+ go 
+`create function func_list_student_is_HSG_by_lop(@Lop Nvarchar(5))
+ returns @list_student table (MaSV int , TenSV Nvarchar(30), DiemTB float, Lop Nvarchar(5))
+ as 
+ begin
+	insert into @list_student
+	select SINHVIEN.MaSV, TenSV, AVG(Diem), Lop 
+	from SINHVIEN	join KETQUA on SINHVIEN.MaSV = KETQUA.MaSV
+	where Lop like @Lop
+	group by SINHVIEN.MaSV, TenSV, Lop
+	return
+ end
+ go;
+ select * from dbo.func_list_student_is_HSG_by_lop('L03')
+ --2. Thống kê số lượng sinh viên thi lại theo từng quê (thi lại 1 môn bất kì)
+ go 
+ create function func_list_count_student_by_que(@Que Nvarchar(15))
+ returns @list_count_student table (Que Nvarchar (15), SVHocLai int)
+ as 
+ begin
+	if (@Que like '*')
+		begin
+			insert into @list_count_student
+			select Que, COUNT(distinct SINHVIEN.MaSV) 
+			from SINHVIEN	join KETQUA on SINHVIEn.MaSV = KETQUA.MaSV
+			where Diem < 4
+			group by Que
+		end
+	else 
+		begin
+			insert into @list_count_student
+			select Que, COUNT(distinct SINHVIEN.MaSV) 
+			from SINHVIEN	join KETQUA on SINHVIEn.MaSV = KETQUA.MaSV
+			where (Diem < 4) and (Que like @Que)
+			group by Que
+		end
+	return
+ end
+ go;
+ select * from dbo.func_list_count_student_by_que('Ninh Bình')
+ --3. Nhập mã môn học, in ra danh sách điểm thi của môn học đó
+ go 
+ create function func_list_diem_by_mon_hoc (@MaMH int)
+ returns @list_diem table (MaSV int, TenSV Nvarchar(30), Lop Nvarchar(5), Diem float)
+ as
+ begin
+	insert into @list_diem 
+		select SINHVIEN.MaSV, TenSV, Lop, Diem
+		from SINHVIEN	join KETQUA on SINHVIEN.MaSV = KETQUA.MaSV
+		where MaMH = @MaMH
+	return
+ end
+ go;
+ select * from dbo.func_list_diem_by_mon_hoc(2)
+ --4. Nhập mã môn học, mã sinh viên, in ra điểm thi của người đó
+ --NOTE: câu 3 và 4: nếu nhập mã môn học là '*' thì in ra tất cả môn học, nếu nhập mã sinh viên là '*' thì in ra kết quả của mọi sinh viên
+ --5. Nhà trường hỗ trợ kinh phí cho sinh viên nữ ngoại tỉnh Hà Nội và HCM, hãy tìm danh sách các sinh viên đó
+ --6. Sửa lại giá trị ngày sinh của sinh viên có @maSV truyền vào bằng cách thêm vào 10 năm tuổi, nếu giá trị @maSV = '*' thì sửa năm sinh của tất cả sinh viên them 1 năm, nếu giá trị @maSV là  1 lớp nào đó thì sửa năm sinh toàn bộ lớp đó thêm 1 năm. Nếu có sinh viên nào trong danh sách các sinh viên sửa năm sinh mà sau khi thêm giá trị ngày hiện tại thì không thực hiện lệnh đó.
