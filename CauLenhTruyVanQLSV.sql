@@ -51,12 +51,14 @@ where	(MaMH = 1)
 select SINHVIEN.MaSV, TenSV 
 from SINHVIEN	join KETQUA on SINHVIEN.MaSV = KETQUA.MaSV
 				join MONHOC ON KETQUA.MaMH = MONHOC.MaMH
-where	(Diem < 4) and (TenMH like N'Toán cao cấp')
+where	(Diem < 4) and (TenMH like N'Toán cao cấp') and (Diem is null)
+
 --9. Đối với mỗi môn, cho biết tên môn và số sinh viên phải thi lại môn đó mà số sinh viên thi lại >=2
 select TenMH, COUNT(TenMH) as N'Số sinh viên thi lại'  from KETQUA join MONHOC on KETQUA.MaMH = MONHOC.MaMH 
 where Diem < 4
 group by TenMH
 having COUNT(TenMH) >=2
+
 --10. Cho biết mã sinh viên, tên và lớp của sinh viên đạt điểm cao nhất môn Tin đại cương
 select SINHVIEN.MaSV, TenSV 
 from SINHVIEN	join KETQUA on SINHVIEN.MaSV = KETQUA.MaSV
@@ -65,6 +67,7 @@ where Diem =	(
 					from KETQUA join MONHOC on KETQUA.MaMH = MONHOC.MaMH
 					where (TenMH like N'Tin đại cương')
 				)
+
 --11. Đối với mỗi lớp, lập bảng điểm gồm mã sinh viên, tên sinh viên và điểm trung bình chung học tập. 
 select Lop,SINHVIEN.MaSV,TenSV, AVG(Diem) as N'Điểm trung bình' 
 from SINHVIEN join KETQUA on SINHVIEN.MaSV = KETQUA.MaSV
@@ -104,27 +107,31 @@ from SINHVIEN join KETQUA on SINHVIEN.MaSV = KETQUA.MaSV
 where (Diem is not null)
 group by SINHVIEN.MaSV, TenSV
 having COUNT(SINHVIEN.MaSV)= (select COUNT(*) from MONHOC)
+
 --14. Cho biết mã sinh viên và tên của sinh viên có điểm trung bình chung học tập >=6
 select SINHVIEN.MaSV, TenSV,AVG(Diem)
-from SINHVIEN join KETQUA on SINHVIEN.MaSV = KETQUA.MaSV
+from SINHVIEN	join KETQUA on SINHVIEN.MaSV = KETQUA.MaSV
+				join MONHOC on MONHOC.MaMH = KETQUA.MaMH
 group by SINHVIEN.MaSV, TenSV
-having AVG(Diem)>=6.0
+having (sum(Diem*DVHT)/sum(DVHT))>=6.0
+
 --15. Cho biết mã sinh viên và tên những sinh viên phải thi lại ở ít nhất là những môn mà sinh viên có mã số 3 phải thi lại
 select SiNHVIEN.MaSV, TenSV
 from SINHVIEN join KETQUA on SINHVIEN.MaSV =KETQUA.MaSV
 where		((Diem<4) or (Diem is null)) and (SINHVIEN.MaSV!=3)
 		and 
 			(MaMH in(
-					select MONHOC.MaMH 
-					from MONHOC join KETQUA on MONHOC.MaMH = KETQUA.MaMH
-					where (Diem <4) and (MaSV=3) 
+					select MaMH 
+					from KETQUA
+					where ((Diem <4) or Diem is null) and (MaSV=3) 
 					)
 		)
 group by SiNHVIEN.MaSV, TenSV
-having COUNT(SiNHVIEN.MaSV) =	(
+having COUNT(KETQUA.MaMH) =	(
 									select COUNT(*) 
-									from MONHOC join KETQUA on MONHOC.MaMH = KETQUA.MaMH
-									where (Diem <4) and (MaSV=3)
+									from KETQUA
+									where ((Diem<4) or (Diem is null)) and (MaSV=3)
+
 								)
 --16. Cho mã sv và tên của những sinh viên có hơn nửa số điểm  >=5. 
 select BangSoDiemLonHon5.MaSV, TenSV, SoLuongDiemLonHon5, SoLuongMon
@@ -138,7 +145,8 @@ join
 	from KETQUA 
 	group by MaSV) as BangSoMon
 on BangSoDiemLonHon5.MaSV = BangSoMon.MaSV
-where SoLuongDiemLonHon5 > SoLuongMon / 2
+where SoLuongDiemLonHon5 > (SoLuongMon / 2)
+
 --17. Cho danh sách tên và mã sinh viên có điểm trung bình chung lớn hơn điểm trung bình của toàn khóa.
 select SINHVIEN.MaSV, TenSV
 from SINHVIEN join KETQUA on SINHVIEN.MaSV = KETQUA.MaSV
